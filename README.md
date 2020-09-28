@@ -25,6 +25,10 @@ go get -u github.com/mmuflih/gorm-paginator
 ## Usage
 
 ```go
+import (
+    paginator "github.com/mmuflih/gorm-paginator"
+)
+
 type Student struct {
 	ID       int
 	Name     string
