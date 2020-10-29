@@ -31,7 +31,14 @@ type Config struct {
 	Page    int
 	Size    int
 	OrderBy []string
+	Filters []Filter
 	ShowSQL bool
+}
+
+type Filter struct {
+	Field     string
+	Operation string
+	Value     string
 }
 
 type Paginator struct {
@@ -66,8 +73,11 @@ func Make(p *Config, gormDS interface{}) *Paginator {
 	var result Paginator
 	var count int64
 
-	db.Model(gormDS).Count(&count)
+	for _, filter := range p.Filters {
+		db.Where(filter.Field+" "+filter.Operation+" ?", filter.Value)
+	}
 
+	db.Model(gormDS).Count(&count)
 	db.Scopes(gormPaginate(p.Page, p.Size)).Find(gormDS)
 
 	result.Data = gormDS
