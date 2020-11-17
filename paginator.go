@@ -34,6 +34,7 @@ type Config struct {
 	Page    int
 	Size    int
 	OrderBy []string
+	GroupBy []string
 	Filters []Filter
 	ShowSQL bool
 }
@@ -41,7 +42,7 @@ type Config struct {
 type Filter struct {
 	Field     string
 	Operation string
-	Value     string
+	Value     interface{}
 }
 
 type Paginator struct {
@@ -89,7 +90,6 @@ func Make(p *Config, ds interface{}) *Paginator {
 }
 
 func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
-
 	var result Paginator
 	var count int64
 
@@ -105,10 +105,10 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 
 	for id, filter := range p.Filters {
 		if id == 0 {
-			where += " where " + filter.Field + " " + filter.Operation + " " + filter.Value
+			where += " where " + filter.Field + " " + filter.Operation + " " + filter.Value.(string)
 			continue
 		}
-		where += "	and " + filter.Field + " " + filter.Operation + " " + filter.Value
+		where += "	and " + filter.Field + " " + filter.Operation + " " + filter.Value.(string)
 	}
 	query += where
 	limitOffset := fmt.Sprintf(" limit %d offset %d ", p.Size, (p.Page-1)*p.Size)
@@ -122,7 +122,16 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 		order = order[:len(order)-1]
 	}
 
-	err := p.DB.Raw(query + order + limitOffset).Scan(ds).Error
+	group := ""
+	if len(p.GroupBy) > 0 {
+		order += " group by "
+		for _, g := range p.GroupBy {
+			group += g + ","
+		}
+		group = group[:len(group)-1]
+	}
+
+	err := p.DB.Raw(query + group + order + limitOffset).Scan(ds).Error
 	if err != nil {
 		fmt.Println("ERROR Paginator RAW", err)
 	}
