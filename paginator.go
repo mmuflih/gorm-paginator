@@ -126,10 +126,10 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 
 	for id, filter := range p.Filters {
 		if id == 0 {
-			where += " where " + filter.Field + " " + filter.Operation + " " + filter.Value.(string)
+			where += " where " + filter.generateFilterRaw()
 			continue
 		}
-		where += "	and " + filter.Field + " " + filter.Operation + " " + filter.Value.(string)
+		where += "	and " + filter.generateFilterRaw()
 	}
 	query += where
 	limitOffset := fmt.Sprintf(" limit %d offset %d ", p.Size, (p.Page-1)*p.Size)
