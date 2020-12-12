@@ -99,6 +99,17 @@ func Make(p *Config, ds interface{}) *Paginator {
 	return &result
 }
 
+func (f Filter) generateFilterRaw() string {
+	if f.Operation == "raw" {
+		return f.Value.(string)
+	}
+	if f.Value == nil {
+		return f.Field + " is null"
+	} else {
+		return f.Field + " " + f.Operation + " " + f.Value.(string)
+	}
+}
+
 func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 	var result Paginator
 	var count int64
