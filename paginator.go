@@ -73,10 +73,16 @@ func Make(p *Config, ds interface{}) *Paginator {
 	var count int64
 
 	for _, filter := range p.Filters {
+		if filter.Operation == "raw" {
+			db.Where(filter.Value)
+			continue
+		}
 		if filter.Value == nil {
 			db.Where(filter.Field + " is null")
+			continue
 		} else {
 			db.Where(filter.Field+" "+filter.Operation+" ?", filter.Value)
+			continue
 		}
 	}
 
