@@ -2,6 +2,8 @@ package paginator
 
 import (
 	"fmt"
+	"reflect"
+	"strconv"
 	"strings"
 
 	"gorm.io/gorm"
@@ -106,8 +108,19 @@ func (f Filter) generateFilterRaw() string {
 	if f.Value == nil {
 		return f.Field + " is null"
 	} else {
-		return f.Field + " " + f.Operation + " " + f.Value.(string)
+		return f.Field + " " + f.Operation + " " + f.getValue()
 	}
+}
+
+func (f Filter) getValue() string {
+	v := reflect.ValueOf(f.Value)
+	switch v.Type().Name() {
+	case "int":
+		return strconv.Itoa(f.Value.(int))
+	case "string":
+		return f.Value.(string)
+	}
+	return ""
 }
 
 func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
