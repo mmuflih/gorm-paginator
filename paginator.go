@@ -170,7 +170,19 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 		fmt.Println("ERROR Paginator RAW", err)
 	}
 	queries := strings.Split(query, "from")
-	p.DB.Raw("select count(*) FROM " + queries[1]).Scan(&count)
+	nextStatement := ""
+	for k, query := range queries {
+		if k == 0 {
+			continue
+		}
+		if k == 1 {
+			nextStatement += query
+			continue
+		}
+		nextStatement += " from " + query
+	}
+	nQuery := "select count(*) FROM " + nextStatement
+	p.DB.Raw(nQuery).Scan(&count)
 
 	result.Data = ds
 	result.Paginate = Paginate{
