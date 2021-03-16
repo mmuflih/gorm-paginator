@@ -2,6 +2,7 @@ package paginator
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -53,9 +54,10 @@ type Paginator struct {
 }
 
 type Paginate struct {
-	Page  int   `json:"page"`
-	Size  int   `json:"size"`
-	Total int64 `json:"total"`
+	Page      int   `json:"page"`
+	Size      int   `json:"size"`
+	Total     int64 `json:"total"`
+	PageCount int   `json:"page_count"`
 }
 
 func Make(p *Config, ds interface{}) *Paginator {
@@ -96,6 +98,7 @@ func Make(p *Config, ds interface{}) *Paginator {
 		p.Page,
 		p.Size,
 		count,
+		int(math.Ceil(float64(count / int64(p.Size)))),
 	}
 
 	return &result
@@ -189,6 +192,7 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 		p.Page,
 		p.Size,
 		count,
+		int(math.Ceil(float64(count) / float64(p.Size))),
 	}
 
 	return &result
