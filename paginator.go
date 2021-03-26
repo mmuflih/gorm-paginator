@@ -161,7 +161,7 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 
 	group := ""
 	if len(p.GroupBy) > 0 {
-		order += " group by "
+		group += " group by "
 		for _, g := range p.GroupBy {
 			group += g + ","
 		}
