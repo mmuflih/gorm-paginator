@@ -93,12 +93,16 @@ func Make(p *Config, ds interface{}) *Paginator {
 	db.Model(ds).Count(&count)
 	db.Scopes(gormPaginate(p.Page, p.Size)).Find(ds)
 
+	pageCount := math.Floor(float64(count / int64(p.Size)))
+	if count%int64(p.Size) > 0 {
+		pageCount++
+	}
 	result.Data = ds
 	result.Paginate = Paginate{
 		p.Page,
 		p.Size,
 		count,
-		int(math.Ceil(float64(count / int64(p.Size)))),
+		int(pageCount),
 	}
 
 	return &result
@@ -187,12 +191,16 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 	nQuery := "select count(*) FROM " + nextStatement
 	p.DB.Raw(nQuery).Scan(&count)
 
+	pageCount := math.Floor(float64(count / int64(p.Size)))
+	if count%int64(p.Size) > 0 {
+		pageCount++
+	}
 	result.Data = ds
 	result.Paginate = Paginate{
 		p.Page,
 		p.Size,
 		count,
-		int(math.Ceil(float64(count) / float64(p.Size))),
+		int(pageCount),
 	}
 
 	return &result
