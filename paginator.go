@@ -176,7 +176,7 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 	if err != nil {
 		fmt.Println("ERROR Paginator RAW", err)
 	}
-	queries := strings.Split(query, "from")
+	queries := strings.Split(strings.ToLower(query), "from")
 	nextStatement := ""
 	for k, query := range queries {
 		if k == 0 {
