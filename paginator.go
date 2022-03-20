@@ -48,6 +48,14 @@ type Filter struct {
 	Value     interface{}
 }
 
+type PaginatorSvc struct {
+	Data      interface{} `json:"data"`
+	Page      int         `json:"page"`
+	Size      int         `json:"size"`
+	Total     int64       `json:"total"`
+	PageCount int         `json:"page_count"`
+}
+
 type Paginator struct {
 	Data     interface{} `json:"data"`
 	Paginate Paginate    `json:"paginate"`
