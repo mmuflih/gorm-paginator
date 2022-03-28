@@ -17,20 +17,7 @@ import (
  * muflic.24@gmail.com
  **/
 
-func gormPaginate(page, size int) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		if page <= 0 {
-			page = 1
-		}
-
-		if size <= 0 {
-			size = 100
-		}
-
-		offset := (page - 1) * size
-		return db.Offset(offset).Limit(size)
-	}
-}
+type Filter map[string]map[string]interface{}
 
 type Config struct {
 	DB      *gorm.DB
@@ -38,14 +25,8 @@ type Config struct {
 	Size    int
 	OrderBy []string
 	GroupBy []string
-	Filters []Filter
+	Filters Filter
 	ShowSQL bool
-}
-
-type Filter struct {
-	Field     string
-	Operation string
-	Value     interface{}
 }
 
 type PaginatorSvc struct {
@@ -68,6 +49,67 @@ type Paginate struct {
 	PageCount int   `json:"page_count"`
 }
 
+func generateFilter(field, op string, val interface{}) string {
+	if op == "raw" {
+		return field + " " + val.(string)
+	}
+	if val == nil {
+		return field + " is null"
+	} else {
+		return field + " " + op + " " + getValue(val)
+	}
+}
+
+func getValue(val interface{}) string {
+	v := reflect.ValueOf(val)
+	switch v.Type().Name() {
+	case "int":
+		return strconv.Itoa(val.(int))
+	case "string":
+		return val.(string)
+	}
+	return ""
+}
+
+func generateConditionRaw(filters Filter) string {
+	var where string
+	var id int
+	for field, val := range filters {
+		for op, v := range val {
+			if id == 0 {
+				where += " where " + generateFilter(field, op, v)
+				break
+			}
+			where += "	and " + generateFilter(field, op, v)
+		}
+		id++
+	}
+	return where
+}
+
+func generateCondition(db *gorm.DB, filters Filter) *gorm.DB {
+	var id int
+
+	for field, val := range filters {
+		for op, v := range val {
+			if op == "raw" {
+				db.Where(field + " " + getValue(v))
+				continue
+			}
+			if val == nil {
+				db.Where(field + " is null")
+				continue
+			} else {
+				db.Where(field+" "+op+" ?", val)
+				continue
+			}
+
+		}
+		id++
+	}
+	return db
+}
+
 func Make(p *Config, ds interface{}) *Paginator {
 	db := p.DB
 
@@ -83,21 +125,7 @@ func Make(p *Config, ds interface{}) *Paginator {
 
 	var result Paginator
 	var count int64
-
-	for _, filter := range p.Filters {
-		if filter.Operation == "raw" {
-			db.Where(filter.Value)
-			continue
-		}
-		if filter.Value == nil {
-			db.Where(filter.Field + " is null")
-			continue
-		} else {
-			db.Where(filter.Field+" "+filter.Operation+" ?", filter.Value)
-			continue
-		}
-	}
-
+	db = generateCondition(db, p.Filters)
 	db.Model(ds).Count(&count)
 	db.Scopes(gormPaginate(p.Page, p.Size)).Find(ds)
 
@@ -116,28 +144,6 @@ func Make(p *Config, ds interface{}) *Paginator {
 	return &result
 }
 
-func (f Filter) generateFilterRaw() string {
-	if f.Operation == "raw" {
-		return f.Value.(string)
-	}
-	if f.Value == nil {
-		return f.Field + " is null"
-	} else {
-		return f.Field + " " + f.Operation + " " + f.getValue()
-	}
-}
-
-func (f Filter) getValue() string {
-	v := reflect.ValueOf(f.Value)
-	switch v.Type().Name() {
-	case "int":
-		return strconv.Itoa(f.Value.(int))
-	case "string":
-		return f.Value.(string)
-	}
-	return ""
-}
-
 func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 	var result Paginator
 	var count int64
@@ -150,16 +156,7 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 		p.Size = 100
 	}
 
-	var where string
-
-	for id, filter := range p.Filters {
-		if id == 0 {
-			where += " where " + filter.generateFilterRaw()
-			continue
-		}
-		where += "	and " + filter.generateFilterRaw()
-	}
-	query += where
+	query += generateConditionRaw(p.Filters)
 	limitOffset := fmt.Sprintf(" limit %d offset %d ", p.Size, (p.Page-1)*p.Size)
 
 	order := ""
@@ -212,4 +209,19 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 	}
 
 	return &result
+}
+
+func gormPaginate(page, size int) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if page <= 0 {
+			page = 1
+		}
+
+		if size <= 0 {
+			size = 100
+		}
+
+		offset := (page - 1) * size
+		return db.Offset(offset).Limit(size)
+	}
 }
