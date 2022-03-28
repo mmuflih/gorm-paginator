@@ -17,15 +17,13 @@ import (
  * muflic.24@gmail.com
  **/
 
-type Filter map[string]map[string]interface{}
-
 type Config struct {
 	DB      *gorm.DB
 	Page    int
 	Size    int
 	OrderBy []string
 	GroupBy []string
-	Filters Filter
+	Filters Where
 	ShowSQL bool
 }
 
@@ -71,7 +69,7 @@ func getValue(val interface{}) string {
 	return ""
 }
 
-func generateConditionRaw(filters Filter) string {
+func generateConditionRaw(filters Where) string {
 	var where string
 	var id int
 	for field, val := range filters {
@@ -87,7 +85,7 @@ func generateConditionRaw(filters Filter) string {
 	return where
 }
 
-func generateCondition(db *gorm.DB, filters Filter) *gorm.DB {
+func generateCondition(db *gorm.DB, filters Where) *gorm.DB {
 	var id int
 
 	for field, val := range filters {
