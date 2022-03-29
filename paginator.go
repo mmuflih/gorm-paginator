@@ -90,15 +90,16 @@ func generateCondition(db *gorm.DB, filters Where) *gorm.DB {
 
 	for field, val := range filters {
 		for op, v := range val {
+			fmt.Println(field, op, v)
 			if op == "raw" {
 				db.Where(field + " " + getValue(v))
 				continue
 			}
-			if val == nil {
+			if v == nil {
 				db.Where(field + " is null")
 				continue
 			} else {
-				db.Where(field+" "+op+" ?", val)
+				db.Where(field+" "+op+" ?", v)
 				continue
 			}
 
