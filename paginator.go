@@ -62,10 +62,12 @@ type Paginator struct {
 }
 
 type Paginate struct {
-	Page      int   `json:"page"`
-	Size      int   `json:"size"`
-	Total     int64 `json:"total"`
-	PageCount int   `json:"page_count"`
+	Page       int   `json:"page"`
+	Size       int   `json:"size"`
+	Total      int64 `json:"total"`
+	TotalPages int   `json:"total_pages"`
+	NextPage   *int  `json:"next_page"`
+	PrevPage   *int  `json:"prev_page"`
 }
 
 func Make(p *Config, ds interface{}) *Paginator {
@@ -106,12 +108,7 @@ func Make(p *Config, ds interface{}) *Paginator {
 		pageCount++
 	}
 	result.Data = ds
-	result.Paginate = Paginate{
-		p.Page,
-		p.Size,
-		count,
-		int(pageCount),
-	}
+	result.Paginate = buildPaginator(p, count)
 
 	return &result
 }
@@ -199,17 +196,37 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 	nQuery := "select count(*) FROM " + nextStatement
 	p.DB.Raw(nQuery).Scan(&count)
 
-	pageCount := math.Floor(float64(count / int64(p.Size)))
+	var pageCount float64 = math.Floor(float64(count / int64(p.Size)))
 	if count%int64(p.Size) > 0 {
 		pageCount++
 	}
 	result.Data = ds
-	result.Paginate = Paginate{
-		p.Page,
-		p.Size,
-		count,
-		int(pageCount),
-	}
+	result.Paginate = buildPaginator(p, count)
 
 	return &result
+}
+
+func buildPaginator(p *Config, c int64) Paginate {
+	var prevPage, nextPage *int
+	var page int = p.Page
+	var size int = p.Size
+	totalPages := int(math.Ceil(float64(c) / float64(size)))
+
+	if page > 1 {
+		np := page - 1
+		prevPage = &np
+	}
+	if page == totalPages {
+	} else {
+		np := page + 1
+		nextPage = &np
+	}
+	return Paginate{
+		Total:      c,
+		Page:       page,
+		Size:       size,
+		TotalPages: totalPages,
+		NextPage:   nextPage,
+		PrevPage:   prevPage,
+	}
 }
