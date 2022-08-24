@@ -41,10 +41,12 @@ type Paginator struct {
 }
 
 type Paginate struct {
-	Page      int   `json:"page"`
-	Size      int   `json:"size"`
-	Total     int64 `json:"total"`
-	PageCount int   `json:"page_count"`
+	Page       int   `json:"page"`
+	Size       int   `json:"size"`
+	Total      int64 `json:"total"`
+	TotalPages int   `json:"total_pages"`
+	NextPage   *int  `json:"next_page"`
+	PrevPage   *int  `json:"prev_page"`
 }
 
 func generateFilter(field, op string, val interface{}) string {
@@ -133,12 +135,7 @@ func Make(p *Config, ds interface{}) *Paginator {
 		pageCount++
 	}
 	result.Data = ds
-	result.Paginate = Paginate{
-		p.Page,
-		p.Size,
-		count,
-		int(pageCount),
-	}
+	result.Paginate = buildPaginator(p, count)
 
 	return &result
 }
@@ -200,12 +197,7 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 		pageCount++
 	}
 	result.Data = ds
-	result.Paginate = Paginate{
-		p.Page,
-		p.Size,
-		count,
-		int(pageCount),
-	}
+	result.Paginate = buildPaginator(p, count)
 
 	return &result
 }
@@ -222,5 +214,30 @@ func gormPaginate(page, size int) func(db *gorm.DB) *gorm.DB {
 
 		offset := (page - 1) * size
 		return db.Offset(offset).Limit(size)
+	}
+}
+
+func buildPaginator(p *Config, c int64) Paginate {
+	var prevPage, nextPage *int
+	var page int = p.Page
+	var size int = p.Size
+	totalPages := int(math.Ceil(float64(c) / float64(size)))
+
+	if page > 1 {
+		np := page - 1
+		prevPage = &np
+	}
+	if page == totalPages {
+	} else {
+		np := page + 1
+		nextPage = &np
+	}
+	return Paginate{
+		Total:      c,
+		Page:       page,
+		Size:       size,
+		TotalPages: totalPages,
+		NextPage:   nextPage,
+		PrevPage:   prevPage,
 	}
 }
