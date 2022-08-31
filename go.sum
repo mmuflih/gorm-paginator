@@ -90,6 +90,8 @@ github.com/mmuflih/datelib v0.0.0-20201122065647-104478b931b2/go.mod h1:vYLQMyyt
 github.com/mmuflih/go-text-log v1.0.0/go.mod h1:SxRIr0dbFW+CMldSw8Qvjg5N/lR2WvXA/zohsqZ99R8=
 github.com/mmuflih/golib v1.3.3 h1:HIPrLe370hBvtqFAL3VAvivkGihQOMpzxgSSddHsHWM=
 github.com/mmuflih/golib v1.3.3/go.mod h1:+G4mzdfDaTe++IRB3rCffONwa7+6NLEUzuOG11Aqg8s=
+github.com/mmuflih/golib v1.3.4 h1:v7xjTYDFwyfK+p5sLNlpABXPR/HojmmF0qWjxF31+dg=
+github.com/mmuflih/golib v1.3.4/go.mod h1:+G4mzdfDaTe++IRB3rCffONwa7+6NLEUzuOG11Aqg8s=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
