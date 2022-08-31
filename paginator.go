@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mmuflih/golib/filter"
 	"gorm.io/gorm"
 )
 
@@ -23,7 +24,7 @@ type Config struct {
 	Size    int
 	OrderBy []string
 	GroupBy []string
-	Filters Where
+	Filters filter.Where
 	ShowSQL bool
 }
 
@@ -71,7 +72,7 @@ func getValue(val interface{}) string {
 	return ""
 }
 
-func generateConditionRaw(filters Where) string {
+func generateConditionRaw(filters filter.Where) string {
 	var where string
 	var id int
 	for field, val := range filters {
@@ -87,7 +88,7 @@ func generateConditionRaw(filters Where) string {
 	return where
 }
 
-func generateCondition(db *gorm.DB, filters Where) *gorm.DB {
+func generateCondition(db *gorm.DB, filters filter.Where) *gorm.DB {
 	var id int
 
 	for field, val := range filters {

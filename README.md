@@ -38,7 +38,7 @@ type Student struct {
 var items []Student
 db = db.Where("name like ?", "%muf%")
 
-paginator.Make(&paginator.Config{
+pag.Make(&pag.Config{
     DB:      db,
     Page:    1,
     Size:   10,
