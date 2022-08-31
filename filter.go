@@ -1,4 +1,4 @@
-package paginator
+package pag
 
 /**
  * Created by Muhammad Muflih Kholidin
