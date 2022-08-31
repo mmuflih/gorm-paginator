@@ -3,8 +3,6 @@ package pag
 import (
 	"fmt"
 	"math"
-	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/mmuflih/golib/filter"
@@ -50,68 +48,6 @@ type Paginate struct {
 	PrevPage   *int  `json:"prev_page"`
 }
 
-func generateFilter(field, op string, val interface{}) string {
-	if op == "raw" {
-		return field + " " + val.(string)
-	}
-	if val == nil {
-		return field + " is null"
-	} else {
-		return field + " " + op + " " + getValue(val)
-	}
-}
-
-func getValue(val interface{}) string {
-	v := reflect.ValueOf(val)
-	switch v.Type().Name() {
-	case "int":
-		return strconv.Itoa(val.(int))
-	case "string":
-		return val.(string)
-	}
-	return ""
-}
-
-func generateConditionRaw(filters filter.Where) string {
-	var where string
-	var id int
-	for field, val := range filters {
-		for op, v := range val {
-			if id == 0 {
-				where += " where " + generateFilter(field, op, v)
-				break
-			}
-			where += "	and " + generateFilter(field, op, v)
-		}
-		id++
-	}
-	return where
-}
-
-func generateCondition(db *gorm.DB, filters filter.Where) *gorm.DB {
-	var id int
-
-	for field, val := range filters {
-		for op, v := range val {
-			fmt.Println(field, op, v)
-			if op == "raw" {
-				db.Where(field + " " + getValue(v))
-				continue
-			}
-			if v == nil {
-				db.Where(field + " is null")
-				continue
-			} else {
-				db.Where(field+" "+op+" ?", v)
-				continue
-			}
-
-		}
-		id++
-	}
-	return db
-}
-
 func Make(p *Config, ds interface{}) *Paginator {
 	db := p.DB
 
@@ -127,7 +63,7 @@ func Make(p *Config, ds interface{}) *Paginator {
 
 	var result Paginator
 	var count int64
-	db = generateCondition(db, p.Filters)
+	db = p.Filters.GenerateCondition(db)
 	db.Model(ds).Count(&count)
 	db.Scopes(gormPaginate(p.Page, p.Size)).Find(ds)
 
@@ -153,7 +89,7 @@ func MakeRaw(query string, p *Config, ds interface{}) *Paginator {
 		p.Size = 100
 	}
 
-	query += generateConditionRaw(p.Filters)
+	query += p.Filters.GenerateConditionRaw()
 	limitOffset := fmt.Sprintf(" limit %d offset %d ", p.Size, (p.Page-1)*p.Size)
 
 	order := ""
